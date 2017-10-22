@@ -3,133 +3,143 @@ import pytest
 from stack_calculator.stack import Stack, StackUnderflow
 
 
-def test_peek_returns_top_stack():
-    stack = Stack([0, 1])
-    result = stack.peek()
-    assert result == 1
+def test_push_adds_item_to_top(redis):
+    stack = Stack(redis, 1)
+    stack.push(5)
+    stack.push(6)
+    assert redis.lpop(1) == b'6'
 
 
-def test_peek_raises_underflow():
-    stack = Stack()
+def test_push_returns_item(redis):
+    stack = Stack(redis, 1)
+    assert stack.push(5) == 5
+
+
+def test_peek_returns_top_item(redis):
+    stack = Stack(redis, 1)
+    stack.push(5)
+    stack.push(6)
+    assert stack.peek() == 6
+
+
+def test_peek_raises_underflow(redis):
+    stack = Stack(redis, 1)
     with pytest.raises(StackUnderflow):
         stack.peek()
 
 
-def test_peek_doesnt_mutate_stack():
-    stack = Stack([1, 2])
-    stack.peek()
-    assert stack.data == [1, 2]
-
-
-def test_pop_removes_top_item():
-    stack = Stack([1, 2])
+def test_pop_removes_top_item(redis):
+    stack = Stack(redis, 1)
+    stack.push(5)
+    stack.push(6)
     stack.pop()
-    assert stack.data == [1]
+    assert stack.peek() == 5
 
 
-def test_pop_returns_top_item():
-    stack = Stack([1, 2])
-    result = stack.pop()
-    assert result == 2
+def test_pop_returns_top_item(redis):
+    stack = Stack(redis, 1)
+    stack.push(5)
+    stack.push(6)
+    assert stack.pop() == 6
 
 
-def test_pop_raises_underflow():
-    stack = Stack()
+def test_pop_raises_underflow(redis):
+    stack = Stack(redis, 1)
     with pytest.raises(StackUnderflow):
         stack.pop()
-        assert stack.data == []
 
 
-def test_push_adds_top_item():
-    stack = Stack([1])
-    stack.push(2)
-    assert stack.data == [1, 2]
-
-
-def test_push_returns_top_item():
-    stack = Stack()
-    result = stack.push(1)
-    assert result == 1
-
-
-def test_add_replaces_top_2_items_with_sum():
-    stack = Stack([1, 2])
+def test_add_replaces_top_2_items_with_sum(redis):
+    stack = Stack(redis, 1)
+    stack.push(5)
+    stack.push(6)
     stack.add()
-    assert stack.data == [3]
+    assert redis.llen(1) == 1
+    assert stack.peek() == 11
 
 
-def test_add_returns_top_item():
-    stack = Stack([1, 2])
-    result = stack.add()
-    assert result == 3
+def test_add_returns_result(redis):
+    stack = Stack(redis, 1)
+    stack.push(5)
+    stack.push(6)
+    assert stack.add() == 11
 
 
-def test_add_raises_underflow():
-    stack = Stack([1])
+def test_add_raises_underflow(redis):
+    stack = Stack(redis, 1)
     with pytest.raises(StackUnderflow):
         stack.add()
-        assert stack.data == [1]
 
 
-def test_subtract_replaces_top_2_items_with_subtraction():
-    stack = Stack([5, 1])
+def test_subtract_replaces_top_2_items_with_subtraction(redis):
+    stack = Stack(redis, 1)
+    stack.push(5)
+    stack.push(6)
     stack.subtract()
-    assert stack.data == [4]
+    assert redis.llen(1) == 1
+    assert stack.peek() == -1
 
 
-def test_subtract_returns_top_item():
-    stack = Stack([5, 1])
-    result = stack.subtract()
-    assert result == 4
+def test_subtract_returns_result(redis):
+    stack = Stack(redis, 1)
+    stack.push(5)
+    stack.push(6)
+    assert stack.subtract() == -1
 
 
-def test_subtract_raises_underflow():
-    stack = Stack([1])
+def test_subtract_raises_underflow(redis):
+    stack = Stack(redis, 1)
     with pytest.raises(StackUnderflow):
         stack.subtract()
-        assert stack.data == [1]
 
 
-def test_multiply_replaces_top_2_items_with_multiplication():
-    stack = Stack([5, 2])
+def test_multiply_replaces_top_2_items_with_multiplication(redis):
+    stack = Stack(redis, 1)
+    stack.push(5)
+    stack.push(6)
     stack.multiply()
-    assert stack.data == [10]
+    assert redis.llen(1) == 1
+    assert stack.peek() == 30
 
 
-def test_multiply_returns_top_item():
-    stack = Stack([5, 2])
-    result = stack.multiply()
-    assert result == 10
+def test_multiply_returns_result(redis):
+    stack = Stack(redis, 1)
+    stack.push(5)
+    stack.push(6)
+    assert stack.multiply() == 30
 
 
-def test_multiply_raises_underflow():
-    stack = Stack([1])
+def test_multiply_raises_underflow(redis):
+    stack = Stack(redis, 1)
     with pytest.raises(StackUnderflow):
         stack.multiply()
-        assert stack.data == [1]
 
 
-def test_divide_replaces_top_2_items_with_division():
-    stack = Stack([10, 2])
+def test_divide_replaces_top_2_items_with_division(redis):
+    stack = Stack(redis, 1)
+    stack.push(10)
+    stack.push(2)
     stack.divide()
-    assert stack.data == [5]
+    assert redis.llen(1) == 1
+    assert stack.peek() == 5
 
 
-def test_divide_returns_top_item():
-    stack = Stack([10, 2])
-    result = stack.divide()
-    assert result == 5
+def test_divide_returns_result(redis):
+    stack = Stack(redis, 1)
+    stack.push(10)
+    stack.push(2)
+    assert stack.divide() == 5
 
 
-def test_divide_raises_underflow():
-    stack = Stack([1])
+def test_divide_raises_underflow(redis):
+    stack = Stack(redis, 1)
     with pytest.raises(StackUnderflow):
         stack.divide()
-        assert stack.data == [1]
 
 
-def test_divide_raises_zero_division():
-    stack = Stack([10, 0])
+def test_divide_raises_zero_division(redis):
+    stack = Stack(redis, 1)
+    stack.push(10)
+    stack.push(0)
     with pytest.raises(ZeroDivisionError):
         stack.divide()
-        assert stack.data == [10, 0]
